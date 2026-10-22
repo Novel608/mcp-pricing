@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import MemberBar from '@/views/plan/MemberBar.vue'
 import MenuBrowser from '@/views/plan/MenuBrowser.vue'
 import SelectionSummary from '@/views/plan/SelectionSummary.vue'
+import RecommendationPanel from '@/views/plan/RecommendationPanel.vue'
+import BudgetDashboard from '@/views/plan/BudgetDashboard.vue'
+import ConvertToLedgerDialog from '@/views/plan/ConvertToLedgerDialog.vue'
 import planStore from '@/store/plan'
 import { formatMealTime } from '@/utils/format'
 import { formatYuan } from '@/utils/money'
@@ -53,10 +56,27 @@ watch(
   },
 )
 
+/** 推荐 / 基线面板：选餐变化后需重算 */
+const recKey = ref(0)
+const snapshot = computed(() => plan.value?.snapshot ?? null)
+const convertVisible = ref(false)
+
+function onSelectionChanged() {
+  recKey.value++
+}
+
 async function onSave() {
   const ok = await planStore.savePlan()
-  if (ok) ElMessage.success('方案已保存')
-  else ElMessage.error('保存失败，请稍后重试')
+  if (ok) {
+    ElMessage.success('方案已保存')
+    onSelectionChanged()
+  } else {
+    ElMessage.error('保存失败，请稍后重试')
+  }
+}
+
+async function onPriced() {
+  await planStore.loadPlan(props.planId)
 }
 </script>
 
@@ -94,21 +114,57 @@ async function onSave() {
       <!-- 主体 -->
       <div class="plan-layout">
         <MenuBrowser />
-        <SelectionSummary />
+        <SelectionSummary @changed="onSelectionChanged" />
+      </div>
+
+      <!-- T04：推荐 + 官方核价基线 -->
+      <div class="plan-layout plan-layout--insight">
+        <RecommendationPanel :key="`rec-${recKey}`" :plan-id="props.planId" />
+        <BudgetDashboard
+          :key="`budget-${recKey}`"
+          :plan-id="props.planId"
+          :current-subtotal-cents="totalCents"
+          @priced="onPriced"
+        />
       </div>
 
       <!-- 底部动作条 -->
       <div class="plan-actionbar">
         <div class="plan-actionbar__total">
-          <span>当前方案合计</span>
+          <span>当前方案合计（菜单参考价）</span>
           <b>{{ formatYuan(totalCents) }}</b>
+          <small v-if="snapshot" class="plan-actionbar__baseline">
+            官方核价基线 {{ formatYuan(snapshot.expectedTotalCents) }}
+          </small>
         </div>
         <div class="mcd-spacer"></div>
-        <span class="mcd-muted">保存后可在对账工作台继续处理；转出餐账待后续版本</span>
-        <el-button type="primary" size="large" :icon="'Select'" :loading="saving" @click="onSave">
-          保存方案
-        </el-button>
+        <span class="mcd-muted">转出不会下单：仅生成餐账草稿与人员/项目预填</span>
+        <el-button size="large" :loading="saving" @click="onSave">保存方案</el-button>
+        <el-button type="primary" size="large" @click="convertVisible = true">转出为餐账</el-button>
       </div>
+
+      <ConvertToLedgerDialog
+        v-model:visible="convertVisible"
+        :plan-id="props.planId"
+        :expected-total-cents="snapshot?.expectedTotalCents ?? null"
+        :person-count="personCount"
+      />
     </template>
   </div>
 </template>
+
+<style scoped>
+.plan-actionbar__total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.plan-actionbar__baseline {
+  font-size: 12px;
+  color: #909399;
+}
+.plan-layout--insight {
+  margin-top: 12px;
+  align-items: stretch;
+}
+</style>

@@ -102,7 +102,7 @@ export interface PerPersonExpected {
   expectedCents: number
 }
 
-/** 预算基线快照（T04，本次前端不渲染） */
+/** 预算基线快照（T04 试算产物） */
 export interface PlanSnapshot {
   id?: number
   planId?: number
@@ -110,13 +110,16 @@ export interface PlanSnapshot {
   expectedDiscountCents?: number
   expectedDeliveryFeeCents?: number
   expectedTotalCents?: number
-  perPersonExpectedJson?: string
+  /** 后端直接给出数组（R5：Σ == expectedTotalCents） */
+  perPerson?: PerPersonExpected[]
   pricedAt?: string
   menuCacheVersion?: string
   itemsHash?: string
   confidence?: PlanConfidence
   partial?: boolean
-  stale?: boolean
+  /** 软提示：选餐已变更或报价超时，不阻断 */
+  stale?: boolean | null
+  staleReason?: string | null
 }
 
 /** 推荐留痕（T04，本次前端不渲染） */
@@ -130,8 +133,35 @@ export interface PlanRecommendation {
   discountCents?: number | null
   addedCostCents?: number | null
   netSavingCents?: number | null
+  /** netSaving ≤ 0 → 灰显不置顶（R6 反凑单诱导） */
   notWorthIt?: boolean
-  adopted?: boolean
+  /** 后端字段名为 accepted */
+  accepted?: boolean
+  createdAt?: string
+}
+
+/** 预算 vs 实际差异（T05，GET /ledgers/{id}/vs-plan，只读派生） */
+export interface PlanVsActual {
+  ledgerId: number
+  planId: number
+  expectedTotalCents: number
+  actualTotalCents: number
+  /** 实际 − 预期 */
+  diffCents: number
+  /** OVER 超支 / UNDER 结余 / EQUAL 持平 */
+  direction: 'OVER' | 'UNDER' | 'EQUAL'
+  balanced: boolean
+  baselineConfidence?: string | null
+  baselineStale?: boolean | null
+  persons: PlanVsActualPerson[]
+}
+
+export interface PlanVsActualPerson {
+  participantId: number
+  displayName: string
+  expectedCents: number
+  actualCents: number
+  diffCents: number
 }
 
 /**

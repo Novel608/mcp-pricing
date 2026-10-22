@@ -7,6 +7,7 @@ import type {
   UpdateParticipantPayload,
   UpdateSubsidyRulePayload,
 } from '@/types'
+import type { PlanVsActual } from '@/types/plan'
 
 /**
  * 对账域 REST 客户端（V1.0 §6）。
@@ -50,6 +51,16 @@ export const ledgerApi = {
   /** 修改餐补上限 / 含配送费开关 */
   updateSubsidyRule(id: number, payload: UpdateSubsidyRulePayload): Promise<unknown> {
     return http.put(`/ledgers/${id}/subsidy-rule`, payload) as unknown as Promise<unknown>
+  },
+
+  /** T05 #11：由选餐方案转出餐账（唯一正式入口），后端返回新账 id */
+  createFromPlan(planId: number): Promise<number> {
+    return http.post(`/ledgers/from-plan/${planId}`) as unknown as Promise<number>
+  },
+
+  /** T05 #12：预算 vs 实际差异（只读派生；未关联/无基线时后端返回 404 错误码） */
+  getVsPlan(id: number): Promise<PlanVsActual> {
+    return http.get(`/ledgers/${id}/vs-plan`, { silent: true } as HttpConfig) as unknown as Promise<PlanVsActual>
   },
 
   /** 导出 CSV（blob 原样返回，含响应头以便取文件名） */

@@ -7,6 +7,7 @@ import StepGuide from '@/components/StepGuide.vue'
 import OrderCard from '@/components/OrderCard.vue'
 import ParticipantTable from '@/components/ParticipantTable.vue'
 import ProjectSummaryCard from '@/components/ProjectSummaryCard.vue'
+import PlanVsActualTab from '@/views/ledger/PlanVsActualTab.vue'
 import PendingItemsCard from '@/components/PendingItemsCard.vue'
 import SubsidyRulePanel from '@/components/SubsidyRulePanel.vue'
 import OrderPickerDialog from '@/components/OrderPickerDialog.vue'
@@ -156,6 +157,11 @@ function openPicker() {
           </section>
         </div>
       </div>
+
+      <!-- ④ 预算 vs 实际（T05：仅方案转出的餐账有基线，其余给出引导） -->
+      <section id="section-vs-plan" class="mcd-section">
+        <PlanVsActualTab :ledger-id="props.ledgerId" />
+      </section>
 
       <!-- ③ 人员与项目 -->
       <section id="section-participants" class="mcd-section">

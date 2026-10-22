@@ -5,6 +5,8 @@ import type {
   MealDetail,
   MenuResponse,
   PlanDetail,
+  PlanRecommendation,
+  PlanSnapshot,
   SubmitSelectionsPayload,
 } from '@/types/plan'
 
@@ -58,5 +60,27 @@ export const planApi = {
   /** 13. 沙盒选餐方案（无需 Token） */
   getDemoPlan(): Promise<PlanDetail> {
     return http.get('/demo/plan') as unknown as Promise<PlanDetail>
+  },
+
+  /* ===== T04 推荐 + 官方核价 ===== */
+
+  /** 7. 触发 R1/R2/R3 推荐计算（结果落 plan_recommendation） */
+  recommend(id: number): Promise<PlanRecommendation[]> {
+    return http.post(`/plans/${id}/recommendations`) as unknown as Promise<PlanRecommendation[]>
+  },
+
+  /** 8. 采纳 / 取消采纳 */
+  acceptRecommendation(id: number, recId: number, accepted: boolean): Promise<unknown> {
+    return http.patch(`/plans/${id}/recommendations/${recId}`, { accepted }) as unknown as Promise<unknown>
+  },
+
+  /** 9. 触发官方 calculate-price 生成 PlanSnapshot */
+  pricing(id: number, payload?: { orderType?: string; beType?: string }): Promise<PlanSnapshot> {
+    return http.post(`/plans/${id}/pricing`, payload ?? {}) as unknown as Promise<PlanSnapshot>
+  },
+
+  /** 10. 读取最新预期基线（含 stale 软提示） */
+  getSnapshot(id: number): Promise<PlanSnapshot> {
+    return http.get(`/plans/${id}/snapshot`, { silent: true } as HttpConfig) as unknown as Promise<PlanSnapshot>
   },
 }
