@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mcd-ledger-server
+  datasource:
+    url: jdbc:h2:file:./data/ledger;MODE=MySQL;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data-sandbox.sql
+      continue-on-error: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# MyBatis-Plus：全程注解，不写 XML
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+
+# MCP 接入配置（设计 §6.1 / §3.5）
+mcd:
+  mcp:
+    server-url: https://mcp.mcd.cn
+    token: ${MCD_MCP_TOKEN:}
+    rate-limit-per-min: 600
+  sandbox:
+    enabled: true
+
+logging:
+  level:
+    com.mcd.ledger: INFO

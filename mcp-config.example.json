@@ -1,0 +1,6 @@
+{
+  "mcp": {
+    "serverUrl": "https://mcp.mcd.cn",
+    "token": "${MCD_MCP_TOKEN}"
+  }
+}

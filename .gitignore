@@ -1,0 +1,28 @@
+# 构建产物
+target/
+dist/
+
+# H2 文件库数据
+data/
+*.mv.db
+*.trace.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Node
+node_modules/
+
+# 本地配置（含真实 Token，勿提交）
+mcp-config.json
+
+# 日志
+*.log
+
+# A1 probe artifacts (contain raw API responses; never commit)
+.a1-probe/
+
+# 前端开发期 mock（不提交）
+.dev-mock/

@@ -1,0 +1,48 @@
+{
+ "jsonrpc": "2.0",
+ "id": 106,
+ "result": {
+  "content": [
+   {
+    "text": "## Response Structure \n- **重要**: 同一券ID可对应多个券码，展示时按券ID分组\n## 字段说明\n| 字段 | 数据源 | 展示规则 | 是否展示\n|-----|--------|----------|--|\n| 券名 | `data[].title` | 完整显示 | 强制展示 |\n| 券ID | `data[].couponId` | 分组标识 | 强制展示 |\n| 券码 | `data[].couponCode` | 多个时显示\\\"首个(共N张)\\\" | 强制展示 |\n| 有效期 | `data[].tradeDateTime` | 格式化日期 | 强制展示 |\n| 适用商品 | `data[].products[].productName` | 多个商品分行显示 | 强制展示 |\n| 商品编码 | `data[].products[].productCode` | 对应商品编码 | 强制展示 |\n## 输出格式\n## {data[].title}(共{券码}张)\n|券ID|券码|有效期|适用商品|商品编码|\n|:---:|:---:|:---:|:---:|:---:|\n|{data[].couponId}|{首个data[].couponCode}|{data[].tradeDateTime}|{data[].products[].productName}|{data[].products[].productCode}|{\"success\":true,\"code\":200,\"message\":\"请求成功\",\"datetime\":\"2026-10-22 22:45:36\",\"traceId\":\"3e184acdd4489053202caa756a20ed92\",\"data\":[{\"title\":\"新人专享-中杯美式7折\",\"couponId\":\"365A627ABDC435D840984F03055DF097\",\"couponCode\":\"MCD6Z1M0314120J09Z009\",\"tradeDateTime\":\"2026-10-22 00:00:00-2026-11-20 23:59:59\",\"products\":[{\"productCode\":\"9900000119\",\"productName\":\"美式中杯\"}],\"promotionId\":\"110961005\"},{\"title\":\"新人专享-中杯奶铁7折\",\"couponId\":\"54573C230294E24F154414A1EE2949CD\",\"couponCode\":\"MCD60109030K7010ZZM02\",\"tradeDateTime\":\"2026-10-22 00:00:00-2026-11-20 23:59:59\",\"products\":[{\"productCode\":\"9900000117\",\"productName\":\"奶铁中杯\"}],\"promotionId\":\"110961004\"}]}",
+    "type": "text"
+   }
+  ],
+  "isError": false,
+  "structuredContent": {
+   "success": true,
+   "code": 200,
+   "message": "请求成功",
+   "datetime": "2026-10-22 22:45:36",
+   "traceId": "3e184acdd4489053202caa756a20ed92",
+   "data": [
+    {
+     "title": "新人专享-中杯美式7折",
+     "couponId": "365A627ABDC435D840984F03055DF097",
+     "couponCode": "MCD6Z1M0314120J09Z009",
+     "tradeDateTime": "2026-10-22 00:00:00-2026-11-20 23:59:59",
+     "products": [
+      {
+       "productCode": "9900000119",
+       "productName": "美式中杯"
+      }
+     ],
+     "promotionId": "110961005"
+    },
+    {
+     "title": "新人专享-中杯奶铁7折",
+     "couponId": "54573C230294E24F154414A1EE2949CD",
+     "couponCode": "MCD60109030K7010ZZM02",
+     "tradeDateTime": "2026-10-22 00:00:00-2026-11-20 23:59:59",
+     "products": [
+      {
+       "productCode": "9900000117",
+       "productName": "奶铁中杯"
+      }
+     ],
+     "promotionId": "110961004"
+    }
+   ]
+  }
+ }
+}

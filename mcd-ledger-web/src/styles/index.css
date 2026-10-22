@@ -1,0 +1,416 @@
+/* ============ 麦麦餐帐 全局样式 ============ */
+
+:root {
+  --mcd-red: #d62300;
+  --mcd-red-dark: #a81b00;
+  --mcd-red-soft: #fdeceb;
+  --mcd-yellow: #ffc72c;
+  --mcd-bg: #f5f6f8;
+  --mcd-card: #ffffff;
+  --mcd-border: #e4e7ed;
+  --mcd-text: #1f2329;
+  --mcd-text-2: #646a73;
+  --mcd-text-3: #8f959e;
+  --mcd-green: #0f9d58;
+  --mcd-green-soft: #e8f7ef;
+  --mcd-shadow: 0 1px 2px rgba(31, 35, 41, 0.04), 0 4px 16px rgba(31, 35, 41, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: var(--mcd-text);
+  background: var(--mcd-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 金额一律等宽数字，避免对齐抖动 */
+.money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  white-space: nowrap;
+}
+
+.money--lg {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.money--positive {
+  color: var(--mcd-red);
+}
+
+.money--negative {
+  color: var(--mcd-green);
+}
+
+.money--zero {
+  color: var(--mcd-text-3);
+}
+
+/* ============ 通用卡片 / 区块 ============ */
+.mcd-card {
+  background: var(--mcd-card);
+  border: 1px solid var(--mcd-border);
+  border-radius: 12px;
+  box-shadow: var(--mcd-shadow);
+  padding: 16px 18px;
+}
+
+.mcd-section {
+  margin-bottom: 20px;
+  scroll-margin-top: 84px;
+}
+
+.mcd-section__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.mcd-section__title {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mcd-section__sub {
+  font-size: 12px;
+  color: var(--mcd-text-3);
+}
+
+.mcd-spacer {
+  flex: 1;
+}
+
+.mcd-muted {
+  color: var(--mcd-text-3);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ============ 恒等看板 ============ */
+.identity-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.identity-cell {
+  background: var(--mcd-card);
+  border: 1px solid var(--mcd-border);
+  border-radius: 12px;
+  box-shadow: var(--mcd-shadow);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.identity-cell__label {
+  font-size: 13px;
+  color: var(--mcd-text-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.identity-cell--balanced {
+  border-color: #b7ebc6;
+  background: linear-gradient(180deg, #f4fbf6 0%, #ffffff 60%);
+}
+
+.identity-cell--broken {
+  border-color: #f5a39b;
+  background: linear-gradient(180deg, #fff5f4 0%, #ffffff 60%);
+}
+
+.identity-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+
+.identity-diff__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+/* ============ 步骤区 ============ */
+.step-guide {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--mcd-card);
+  border: 1px solid var(--mcd-border);
+  border-radius: 12px;
+  box-shadow: var(--mcd-shadow);
+  padding: 12px 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.step-item {
+  flex: 1;
+  min-width: 132px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.step-item:hover:not(:disabled) {
+  background: #f2f3f5;
+}
+
+.step-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.step-item + .step-item::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: var(--mcd-border);
+}
+
+.step-item__index {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex: none;
+  background: #eceef1;
+  color: var(--mcd-text-2);
+}
+
+.step-item--done .step-item__index {
+  background: var(--mcd-green-soft);
+  color: var(--mcd-green);
+}
+
+.step-item--active .step-item__index {
+  background: var(--mcd-red);
+  color: #fff;
+}
+
+.step-item--warning .step-item__index {
+  background: #fdf3e0;
+  color: #b25e09;
+}
+
+.step-item--blocked .step-item__index {
+  background: var(--mcd-red-soft);
+  color: var(--mcd-red);
+}
+
+.step-item--skipped .step-item__index {
+  background: #eceef1;
+  color: var(--mcd-text-3);
+}
+
+.step-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.step-item__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcd-text);
+}
+
+.step-item__hint {
+  font-size: 11px;
+  color: var(--mcd-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============ 工作台布局 ============ */
+.wb-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .wb-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .identity-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============ 订单卡片 ============ */
+.order-card + .order-card {
+  margin-top: 14px;
+}
+
+.order-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--mcd-border);
+  margin-bottom: 12px;
+}
+
+.order-card__id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mcd-text);
+}
+
+.order-card__alloc {
+  font-size: 12px;
+  color: var(--mcd-text-2);
+}
+
+.order-card__foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--mcd-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.order-card__foot-label {
+  color: var(--mcd-text-3);
+  font-size: 12px;
+}
+
+/* ============ 人员表 ============ */
+.formula-box {
+  background: #f7f8fa;
+  border: 1px solid var(--mcd-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: var(--mcd-text);
+  white-space: pre-wrap;
+  margin: 4px 12px 10px;
+}
+
+/* ============ 项目归集条 ============ */
+.proj-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #eceef1;
+  overflow: hidden;
+  display: flex;
+}
+
+.proj-bar__within {
+  background: var(--mcd-green);
+  height: 100%;
+}
+
+.proj-bar__exceed {
+  background: var(--mcd-red);
+  height: 100%;
+}
+
+/* ============ 空 / 错误状态 ============ */
+.state-panel {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--mcd-text-2);
+}
+
+.state-panel__icon {
+  font-size: 40px;
+  color: var(--mcd-text-3);
+  margin-bottom: 12px;
+}
+
+.state-panel__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--mcd-text);
+  margin-bottom: 6px;
+}
+
+.state-panel__desc {
+  font-size: 13px;
+  color: var(--mcd-text-3);
+  line-height: 1.8;
+}
+
+/* ============ 打印（报销单）全局规则 ============ */
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .app-header {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}
+
