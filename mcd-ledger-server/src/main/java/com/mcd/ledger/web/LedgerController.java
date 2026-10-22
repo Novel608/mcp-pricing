@@ -7,6 +7,9 @@ import com.mcd.ledger.dto.SetAllocationRequest;
 import com.mcd.ledger.dto.SetParticipantProjectRequest;
 import com.mcd.ledger.dto.SetSubsidyRequest;
 import com.mcd.ledger.service.LedgerService;
+import com.mcd.plan.dto.PlanVsActualVO;
+import com.mcd.plan.service.PlanToLedgerConverter;
+import com.mcd.plan.service.PlanVsActualService;
 import jakarta.validation.Valid;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** 对账域 REST（设计 §6）。成功响应由 ResponseWrapperAdvice 统一包装为 ApiResponse。 */
@@ -25,14 +29,44 @@ import org.springframework.web.bind.annotation.RestController;
 public class LedgerController {
 
     private final LedgerService service;
+    private final PlanToLedgerConverter converter;
+    private final PlanVsActualService vsActual;
 
-    public LedgerController(LedgerService service) {
+    /**
+     * 说明（设计 DR-1/DR-2）：本控制器只是**Web 装配点**，注入的 converter / vsActual 均为 plan 域服务，
+     * 依赖方向仍是 plan → ledger；ledger 域的 service / engine 不引用任何 plan 类。
+     */
+    public LedgerController(LedgerService service, PlanToLedgerConverter converter,
+                            PlanVsActualService vsActual) {
         this.service = service;
+        this.converter = converter;
+        this.vsActual = vsActual;
     }
 
     @PostMapping
     public Long create(@RequestBody @Valid CreateLedgerRequest req) {
         return service.createInternal(req);
+    }
+
+    /** #11：由选餐方案转出餐账（唯一正式入口）。 */
+    @PostMapping("/from-plan/{planId}")
+    public Long createFromPlan(@PathVariable Long planId) {
+        return converter.convert(planId);
+    }
+
+    /**
+     * 兼容别名（设计 M7）：语义等价于 `/from-plan/{planId}`，
+     * **不写进 README / MCP_INTEGRATION.md**，仅在实现层并存。
+     */
+    @PostMapping(params = "sourcePlanId")
+    public Long createFromPlanAlias(@RequestParam("sourcePlanId") Long sourcePlanId) {
+        return converter.convert(sourcePlanId);
+    }
+
+    /** #12：预算 vs 实际差异（只读派生，不落库）。 */
+    @GetMapping("/{id}/vs-plan")
+    public PlanVsActualVO vsPlan(@PathVariable Long id) {
+        return vsActual.vsPlan(id);
     }
 
     @GetMapping("/{id}")

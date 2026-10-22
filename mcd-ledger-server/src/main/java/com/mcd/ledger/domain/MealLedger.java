@@ -29,5 +29,14 @@ public class MealLedger {
     /** 状态：DRAFT / CONFIRMED 等 */
     private String status;
 
+    /**
+     * 来源选餐方案（可空外键，设计 DR-2）。
+     * 由 plan 域 {@code PlanToLedgerConverter} 写入；<b>ledger 域既有逻辑永远不读它</b>。
+     */
+    private Long sourcePlanId;
+
+    /** 转出时官方核价的预期总额（分，可空；无基线则为 null） */
+    private Long expectedTotalCents;
+
     private LocalDateTime createdAt;
 }
