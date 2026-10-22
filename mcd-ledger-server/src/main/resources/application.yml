@@ -40,6 +40,52 @@ mcd:
     capability-level: L0
     # 报价过期阈值（分钟），软提示不阻断
     stale-threshold-minutes: 30
+    # 套餐组合规则（R1）：只描述「套餐由哪些单品构成」的活动信息，价格一律取官方菜单
+    combos:
+      - combo-item-id: "9900005456"
+        name: "麦辣鸡腿汉堡三件套"
+        covers:
+          - item-id: "1440"
+            name: "麦辣鸡腿汉堡"
+            quantity: 1
+          - item-id: "4810"
+            name: "薯条"
+            quantity: 1
+          - item-id: "9900008751"
+            name: "可乐"
+            quantity: 1
+      - combo-item-id: "9900005462"
+        name: "板烧鸡腿堡三件套"
+        covers:
+          - item-id: "1406"
+            name: "板烧鸡腿堡"
+            quantity: 1
+          - item-id: "4810"
+            name: "薯条"
+            quantity: 1
+          - item-id: "9900008751"
+            name: "可乐"
+            quantity: 1
+      - combo-item-id: "9900005466"
+        name: "巨无霸三件套"
+        covers:
+          - item-id: "1100"
+            name: "巨无霸"
+            quantity: 1
+          - item-id: "4810"
+            name: "薯条"
+            quantity: 1
+          - item-id: "9900008751"
+            name: "可乐"
+            quantity: 1
+    # 满减档位（R2）：活动规则以门店公示为准；当前小计仍由官方菜单参考价算出
+    thresholds:
+      - title: "满 100 减 15"
+        threshold-cents: 10000
+        discount-cents: 1500
+      - title: "满 200 减 30"
+        threshold-cents: 20000
+        discount-cents: 3000
 
 logging:
   level:

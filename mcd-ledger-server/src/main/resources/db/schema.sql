@@ -149,6 +149,8 @@ CREATE TABLE plan_recommendation (
   added_cost_cents BIGINT NOT NULL,
   net_saving_cents BIGINT NULL,
   price_source VARCHAR(32),
+  -- R6：netSavingCents ≤ 0 → 引擎自动置 TRUE，前端灰显不置顶（设计 T-3 反凑单诱导）
+  not_worth_it BOOLEAN DEFAULT FALSE,
   accepted BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP
 );

@@ -24,6 +24,13 @@ public class SandboxMcpClient extends McpClient {
 
     @Override
     public JsonNode call(String tool, JsonNode args) {
+        // 核价：优先用官方菜单抓取值重算的模拟器（保证 demo 数字自洽），失败回退真实抓取快照
+        if ("calculate-price".equals(tool)) {
+            JsonNode sim = fixture.simulateCalculatePrice(args);
+            if (sim != null) {
+                return sim;
+            }
+        }
         JsonNode preset = fixture.resultFor(tool);
         if (preset != null) {
             return preset;

@@ -38,12 +38,18 @@ class PlanIntegrationTest {
         assertNotNull(vo);
         assertEquals("周六加班餐 · 组队选餐方案", vo.getTitle());
         assertEquals(6, vo.getParticipants().size());
-        // 种子选餐小计：林3350 陈3000 王3300 赵2800 孙(1600+800)=2400 周3900 → 18750
-        assertEquals(18750L, vo.getSummary().getTotalCents());
+        // 种子选餐（code/单价全部取自官方 query-meals 抓取值）：
+        // 林(2250+1350)=3600 陈3600 王(2350+950)=3300 赵(2550+950)=3500 孙(1400+2250)=3650 周(1500+500)=2000
+        assertEquals(19650L, vo.getSummary().getTotalCents());
         ParticipantSelectionVO sun = vo.getSelections().stream()
                 .filter(s -> "孙工".equals(s.getDisplayName())).findFirst().orElseThrow();
-        assertEquals(2400L, sun.getSubtotalCents());
+        assertEquals(3650L, sun.getSubtotalCents());
         assertEquals(2, sun.getItems().size());
+        // 按餐品汇总：9 个餐品，其中「麦辣鸡腿汉堡」「薯条」「可乐」各 2 份（可合成 2 个三件套）
+        assertEquals(9, vo.getAggregates().size());
+        assertEquals(2, vo.getAggregates().stream()
+                .filter(a -> "1440".equals(a.getExternalItemId())).findFirst().orElseThrow()
+                .getTotalQuantity());
     }
 
     @Test

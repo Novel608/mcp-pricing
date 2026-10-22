@@ -21,4 +21,10 @@ public class PlanDetailVO {
     private List<ItemAggregateVO> aggregates = new ArrayList<>();
 
     private PlanSummaryVO summary;
+
+    /** 推荐列表（端点 #2 主读接口一并返回，设计 §3.4）。 */
+    private List<RecommendationVO> recommendations = new ArrayList<>();
+
+    /** 最新预期基线；未核价时为 null。 */
+    private SnapshotVO snapshot;
 }
