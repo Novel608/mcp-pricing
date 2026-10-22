@@ -8,8 +8,11 @@
 --   订单1 物品序：巨无霸(林)/巨无霸(陈)/吉士(王)/吉士(赵)/麦乐鸡(林陈王赵)
 --   订单2 物品序：板烧(孙)/板烧(周)/薯条(孙周陈林王赵)  ← 薯条权重序固定，尾差 467×4 + 466×2
 
-INSERT INTO meal_ledger (id, title, meal_time, operator_name, subsidy_limit_cents, include_delivery_in_subsidy, status, created_at)
-VALUES (1, '周六加班餐 · 两单六人', TIMESTAMP '2026-10-22 20:00:00', '寇豆码', 3500, FALSE, 'CONFIRMED', TIMESTAMP '2026-10-22 20:05:00');
+-- T05 演示闭环：同一餐次、同一批人，本账演示为「由选餐方案 id=1 转出」，
+-- 故带 source_plan_id=1 与 expected_total_cents=19650（官方核价基线）。
+-- 预期 19650（点餐前选餐）vs 实际 22800（真实订单）→ 超支 3150，即「点餐时改主意」的真实场景。
+INSERT INTO meal_ledger (id, title, meal_time, operator_name, subsidy_limit_cents, include_delivery_in_subsidy, status, source_plan_id, expected_total_cents, created_at)
+VALUES (1, '周六加班餐 · 两单六人（含选餐预算基线）', TIMESTAMP '2026-10-22 20:00:00', '寇豆码', 3500, FALSE, 'CONFIRMED', 1, 19650, TIMESTAMP '2026-10-22 20:05:00');
 
 INSERT INTO project_ref (id, ledger_id, name, code) VALUES
   (1, 1, '核心账务重构', 'PROJ-CORE'),

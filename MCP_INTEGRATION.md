@@ -79,6 +79,15 @@
 | 2 | **`order-list` 的 `comboItemList` 无单品拆解价**：套餐行项只有整体金额，拿不到内部单品单价 | 含 `comboItemList` 的订单置信度降级为 `AGREED_ALLOCATION`，走「套餐作为整体金额单元、用户约定分摊」路径，并在 UI 标注【来源：套餐整体约定均分】 |
 | 3 | 订单侧 `price` 字段视为**单价（元）**，行小计 = 单价 × 数量 | `OrderAdapter` 按此换算 `itemTotalCents` |
 | 4 | `query-order` 返回的订单状态可能含取消 / 退款态 | 自动过滤已取消订单；无法判定的进 `PENDING_CONFIRMATION` 待确认区 |
+| 5 | **`query-store-coupons` 不返回券面额**，只有标题 / 券码 / 适用餐品 | R3 券匹配只做「适用餐品 ∩ 已选餐品」的定性匹配，`discountCents=0`、`netSavingCents=NULL`，**绝不臆造优惠金额** |
+| 6 | **`calculate-price` 的响应是「某一固定组合」的快照** | 沙盒层（仅 `mcd.sandbox.enabled=true`）以官方 `query-meals` 抓取值重算小计与 `productList`，保证 demo 数字自洽；真实模式下装配真实 `McpClient`，业务代码零 `if (isSandbox)` |
+
+### 2.4 沙盒镜像：只替换最底层数据源
+
+`McpClientConfig` 按 `mcd.sandbox.enabled` 装配 `McpClient`：`true` → `SandboxMcpClient`，`false` → 真实 `McpClient`。
+`MenuAdapter` / `CouponAdapter` / `PriceAdapter` / `OrderAdapter` 与上层服务**完全共用同一份代码**，
+唯一差别是最底层的数据来源。因此**沙盒演示走过的每一行代码，都是真实链路会走的代码**；
+真实 MCP 不可用（无 Token / 限流）时，产品仍可完整演示。
 
 ---
 

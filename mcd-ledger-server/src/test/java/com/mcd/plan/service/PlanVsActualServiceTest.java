@@ -69,9 +69,25 @@ class PlanVsActualServiceTest {
 
     @Test
     void vsPlan_ledgerNotFromPlan_throwsPlanNotLinked() {
-        // 沙盒账 id=1 由 data-sandbox.sql 直接播种，无 source_plan_id
-        BizException ex = assertThrows(BizException.class, () -> vsActual.vsPlan(1L));
+        // 手工新建一本与选餐无关的账 → 无 source_plan_id
+        com.mcd.ledger.dto.CreateLedgerRequest req = new com.mcd.ledger.dto.CreateLedgerRequest();
+        req.setTitle("手工建账");
+        Long ledgerId = ledgerService.createInternal(req);
+        BizException ex = assertThrows(BizException.class, () -> vsActual.vsPlan(ledgerId));
         assertEquals("PLAN_NOT_LINKED", ex.getErrorCode().code());
+    }
+
+    /** 沙盒账 id=1 播种时已带选餐预算基线 → 可直接对照（预期 19650 vs 实际 22800） */
+    @Test
+    void vsPlan_seededLedger_overBudget3150() {
+        PlanVsActualVO vo = vsActual.vsPlan(1L);
+        assertEquals(1L, vo.getPlanId());
+        assertEquals(19650L, vo.getExpectedTotalCents());
+        assertEquals(22800L, vo.getActualTotalCents());
+        assertEquals(3150L, vo.getDiffCents());
+        assertEquals("OVER", vo.getDirection());
+        assertEquals(6, vo.getPersons().size());
+        assertTrue(vo.getBalanced());
     }
 
     @Test
