@@ -17,7 +17,7 @@ export default defineConfig({
     proxy: {
       // 后端统一前缀 /api/v1，dev 环境下全部转发到本地 Spring Boot
       '/api': {
-        target: 'http://localhost:18080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
     },

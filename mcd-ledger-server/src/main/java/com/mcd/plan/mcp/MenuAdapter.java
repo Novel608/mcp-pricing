@@ -1,9 +1,12 @@
-package com.mcd.ledger.mcp;
+package com.mcd.plan.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mcd.ledger.common.Money;
+import com.mcd.ledger.mcp.McpClient;
+import com.mcd.ledger.mcp.McpEnvelope;
+import com.mcd.ledger.mcp.McpToolWhitelist;
 import com.mcd.plan.dto.MealDetailVO;
 import com.mcd.plan.dto.MealMenuVO;
 import com.mcd.plan.dto.MealVO;
@@ -18,6 +21,8 @@ import org.springframework.stereotype.Component;
  * 菜单适配层（A1 联调，query-meals / query-meal-detail）。
  * 金额为元字符串 → Money.parseYuanToCents 转分；响应经 McpEnvelope.unwrap 解包；
  * Caffeine 缓存：菜单 10min、详情 30min（设计 §7.4）。沙盒模式下 McpClient 由 SandboxMcpClient 顶替，本类零改动。
+ *
+ * 置于 plan 包：返回 plan.dto，且依赖 ledger 的 McpClient/McpEnvelope（plan→ledger，设计 §7.5）。
  */
 @Component
 public class MenuAdapter {
@@ -60,7 +65,6 @@ public class MenuAdapter {
         MealMenuVO vo = new MealMenuVO();
         vo.setStoreId(storeId);
 
-        // tags 归并：categories[].meals[].tags → code→tags
         Map<String, List<String>> tagsByCode = new LinkedHashMap<>();
         JsonNode categories = data.get("categories");
         if (categories != null && categories.isArray()) {
@@ -85,7 +89,6 @@ public class MenuAdapter {
             }
         }
 
-        // meals 为 map：code → {name,currentPrice,originalPrice,discountType,image,isCanWithOrder}
         JsonNode mealsMap = data.get("meals");
         if (mealsMap != null && mealsMap.isObject()) {
             mealsMap.fields().forEachRemaining(e -> {
@@ -143,7 +146,6 @@ public class MenuAdapter {
         return (v != null && !v.isNull()) ? v.asText() : null;
     }
 
-    /** 菜单侧金额：元（字符串/数字）→ 分。 */
     private static Long yuanCents(JsonNode node, String key) {
         JsonNode v = node.get(key);
         if (v == null || v.isNull()) {

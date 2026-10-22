@@ -15,8 +15,6 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 /**
  * MCP 客户端（设计 §3.4/§3.5）：
@@ -27,10 +25,9 @@ import org.springframework.stereotype.Component;
  * 遇 401 转 MCP_AUTH_FAILED，其他上游异常转 MCP_UPSTREAM_ERROR。
  *
  * 白名单校验由适配层（OrderAdapter/MenuAdapter 等）在调用前完成；本类只负责传输。
- * 真实 HTTP 实现仅在 mcd.sandbox.enabled=false 时启用；沙盒模式由 SandboxMcpClient 顶替（同类型 Bean）。
+ * Bean 装配由 McpClientConfig 按 mcd.sandbox.enabled 选择：真实 HTTP 实现（sandbox=false）
+ * 或 SandboxMcpClient 沙盒顶替（sandbox=true，默认）。本类为普通类，可独立 new（单测用）。
  */
-@Component
-@ConditionalOnProperty(name = "mcd.sandbox.enabled", havingValue = "false")
 public class McpClient {
 
     private static final Logger log = LoggerFactory.getLogger(McpClient.class);

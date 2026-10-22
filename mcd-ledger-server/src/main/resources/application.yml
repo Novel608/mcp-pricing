@@ -35,6 +35,11 @@ mcd:
     rate-limit-per-min: 600
   sandbox:
     enabled: true
+  plan:
+    # 能力级别（A1=L0 全量）：L0 / L2+ / L2；与前端 VITE_PLAN_CAPABILITY_LEVEL 必须一致
+    capability-level: L0
+    # 报价过期阈值（分钟），软提示不阻断
+    stale-threshold-minutes: 30
 
 logging:
   level:

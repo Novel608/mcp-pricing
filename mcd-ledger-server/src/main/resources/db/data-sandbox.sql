@@ -62,3 +62,25 @@ INSERT INTO order_item_allocation (id, order_item_id, participant_id, weight, al
   (2006, 203, 1, 1,  467),
   (2007, 203, 3, 1,  466),
   (2008, 203, 4, 1,  466);
+
+-- ===== 沙盒选餐方案（plan id=1，与对账 demo 同源六人两项目；无需 Token）=====
+INSERT INTO meal_plan (id, title, store_id, store_name, channel, meal_time, status, created_at)
+VALUES (1, '周六加班餐 · 组队选餐方案', '190001', '麦当劳(科技园店)', '麦乐送', TIMESTAMP '2026-10-22 20:00:00', 'DRAFT', TIMESTAMP '2026-10-22 19:50:00');
+
+INSERT INTO plan_participant (id, plan_id, display_name, person_ref, project_id, sort_order) VALUES
+  (1, 1, '林工', 'lin',  1, 0),
+  (2, 1, '陈工', 'chen', 1, 1),
+  (3, 1, '王工', 'wang', 1, 2),
+  (4, 1, '赵工', 'zhao', 2, 3),
+  (5, 1, '孙工', 'sun',  1, 4),
+  (6, 1, '周工', 'zhou', 2, 5);
+
+-- 选餐项（unit_price_cents 为分，取自菜单参考价）
+INSERT INTO plan_item_selection (id, plan_id, participant_id, external_item_id, name, quantity, unit_price_cents, spec_options_json) VALUES
+  (1, 1, 1, '9900005456', '麦辣鸡腿汉堡三件套', 1, 3350, NULL),
+  (2, 1, 2, '9900000123', '双层吉士堡套餐',     1, 3000, NULL),
+  (3, 1, 3, '9900000789', '板烧鸡腿堡套餐',     1, 3300, NULL),
+  (4, 1, 4, '9900000345', '麦香鱼套餐',         1, 2800, NULL),
+  (5, 1, 5, '9900000666', '麦辣鸡腿堡',         1, 1600, NULL),
+  (6, 1, 5, '9900000777', '中份薯条',           1,  800, NULL),
+  (7, 1, 6, '9900000888', '麦乐鸡20块',         1, 3900, NULL);

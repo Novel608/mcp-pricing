@@ -1,8 +1,11 @@
-package com.mcd.ledger.mcp;
+package com.mcd.plan.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mcd.ledger.mcp.McpClient;
+import com.mcd.ledger.mcp.McpEnvelope;
+import com.mcd.ledger.mcp.McpToolWhitelist;
 import com.mcd.plan.dto.CouponVO;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 优惠券适配层（query-store-coupons，R3 券匹配数据源）。
- * data 直接为券数组；缓存 5min（设计 §7.4）。只展示不领券。
+ * data 直接为券数组；缓存 5min（设计 §7.4）。只展示不领券。置于 plan 包（plan→ledger）。
  */
 @Component
 public class CouponAdapter {

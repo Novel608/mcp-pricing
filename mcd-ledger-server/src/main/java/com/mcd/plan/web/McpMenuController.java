@@ -1,10 +1,10 @@
 package com.mcd.plan.web;
 
-import com.mcd.ledger.mcp.CouponAdapter;
-import com.mcd.ledger.mcp.MenuAdapter;
 import com.mcd.plan.dto.CouponVO;
 import com.mcd.plan.dto.MealDetailVO;
 import com.mcd.plan.dto.MealMenuVO;
+import com.mcd.plan.mcp.CouponAdapter;
+import com.mcd.plan.mcp.MenuAdapter;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

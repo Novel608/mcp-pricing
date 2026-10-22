@@ -34,14 +34,18 @@ public final class Money {
     }
 
     /**
-     * "148.00" / "¥148.00" / "148" -> 14800（Long 分）。
-     * 预留入口：MCP 若以「元小数」返回金额，统一经此转换。
+     * "148.00" / "¥148.00" / "148" / "+ ¥3" / "- ¥0.5" -> 14800 / 14800 / 14800 / 300 / -50（Long 分）。
+     * MCP 金额统一经此转换；容忍货币符号、千分位与符号后空白（A1 实测 diffPrice 为 "+ ¥3" 形态）。
      */
     public static long parseYuanToCents(String yuan) {
         if (yuan == null || yuan.isBlank()) {
             throw new IllegalArgumentException("empty yuan string");
         }
-        String s = yuan.trim().replace(YUAN, "").replace(",", "").replace("\u2212", "-");
+        String s = yuan.trim().replace(YUAN, "").replace(",", "").replace("\u2212", "-")
+                .replaceAll("\\s+", "");
+        if (s.isEmpty() || "+".equals(s) || "-".equals(s)) {
+            throw new IllegalArgumentException("no digits in yuan string: " + yuan);
+        }
         BigDecimal bd = new BigDecimal(s);
         return bd.movePointRight(2).setScale(0, java.math.RoundingMode.HALF_UP).longValueExact();
     }

@@ -7,9 +7,10 @@ import org.springframework.cache.annotation.EnableCaching;
 
 /**
  * 麦麦餐帐 — 团队餐费对账助手（事后对账主线 F1–F5 + 选餐增量）。
- * 基包 com.mcd.ledger；依赖方向：com.mcd.plan.* 可依赖 com.mcd.ledger.*，反之严禁。
+ * 基包 com.mcd.ledger；显式扫描 com.mcd.plan（选餐域）。
+ * 依赖方向：com.mcd.plan.* 可依赖 com.mcd.ledger.*，反之严禁。
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.mcd.ledger", "com.mcd.plan"})
 @MapperScan({"com.mcd.ledger.mapper", "com.mcd.plan.mapper"})
 @EnableCaching
 public class LedgerApplication {

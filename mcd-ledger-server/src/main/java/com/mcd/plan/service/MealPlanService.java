@@ -9,6 +9,7 @@ import com.mcd.plan.domain.PlanParticipant;
 import com.mcd.plan.domain.enums.PlanStatus;
 import com.mcd.plan.dto.AddParticipantRequest;
 import com.mcd.plan.dto.CreatePlanRequest;
+import com.mcd.plan.dto.ItemAggregateVO;
 import com.mcd.plan.dto.ParticipantSelectionVO;
 import com.mcd.plan.dto.PlanDetailVO;
 import com.mcd.plan.dto.PlanParticipantVO;
@@ -165,6 +166,24 @@ public class MealPlanService {
         }
         summary.setTotalCents(total);
         vo.setSummary(summary);
+        // 按餐品汇总：同一餐品跨成员合并（契约 PlanDetailVO.aggregates），T04 推荐与 T05 转出依赖此视图
+        Map<String, ItemAggregateVO> aggMap = new LinkedHashMap<>();
+        for (PlanItemSelection s : selections) {
+            ItemAggregateVO agg = aggMap.computeIfAbsent(s.getExternalItemId(), k -> {
+                ItemAggregateVO v = new ItemAggregateVO();
+                v.setExternalItemId(k);
+                v.setName(s.getName());
+                return v;
+            });
+            int qty = s.getQuantity() == null ? 1 : s.getQuantity();
+            long unit = s.getUnitPriceCents() == null ? 0L : s.getUnitPriceCents();
+            agg.setTotalQuantity(agg.getTotalQuantity() + qty);
+            agg.setSubtotalCents(agg.getSubtotalCents() + unit * qty);
+            if (!agg.getParticipantIds().contains(s.getParticipantId())) {
+                agg.getParticipantIds().add(s.getParticipantId());
+            }
+        }
+        vo.getAggregates().addAll(aggMap.values());
         return vo;
     }
 

@@ -2,7 +2,13 @@ import { computed, ref } from 'vue'
 
 import { ApiError } from '@/api/http'
 import { planApi } from '@/api/plan'
-import type { MealDetail, MenuMeal, PlanDetail, PlanItemSelection } from '@/types/plan'
+import type {
+  MealDetail,
+  MenuMeal,
+  PlanDetail,
+  PlanItemSelection,
+  SubmitSelectionItem,
+} from '@/types/plan'
 import { normalizeMenu, type NormalizedMenu } from '@/utils/menu'
 
 const DEMO_PLAN_ID = 1
@@ -30,7 +36,29 @@ const activeMeal = ref<MenuMeal | null>(null)
 const mealDetail = ref<MealDetail | null>(null)
 
 const participants = computed(() => plan.value?.participants ?? [])
-const selections = computed(() => plan.value?.selections ?? [])
+
+/**
+ * 后端 selections 是「按成员分组」的数组，这里拍平成内部统一使用的扁平列表。
+ * 拍平同时兼容后端已算好的 subtotalCents。
+ */
+const selections = computed<PlanItemSelection[]>(() => {
+  const out: PlanItemSelection[] = []
+  for (const group of plan.value?.selections ?? []) {
+    const pid = group.participantId
+    for (const item of group.items ?? []) {
+      const spec = item.specOptionsJson ?? item.specOptions ?? null
+      out.push({
+        ...item,
+        participantId: pid,
+        specOptions: spec,
+        specOptionsJson: spec,
+        subtotalCents: item.subtotalCents ?? item.unitPriceCents * item.quantity,
+      })
+    }
+  }
+  return out
+})
+
 const aggregates = computed(() => plan.value?.aggregates ?? [])
 
 /** 当前成员的已选清单 */
@@ -40,25 +68,28 @@ const currentSelections = computed<PlanItemSelection[]>(() => {
   return selections.value.filter((s) => s.participantId === pid)
 })
 
-/** 按人小计 */
+/** 按人小计：优先用服务端 summary，缺失时本地派生 */
 const perPersonSubtotal = computed<Array<{ participantId: number; displayName: string; subtotalCents: number; count: number }>>(() => {
-  const map = new Map<number, { subtotalCents: number; count: number }>()
+  const serverSummary = plan.value?.summary?.perPerson
+  const localMap = new Map<number, { subtotalCents: number; count: number }>()
   for (const s of selections.value) {
-    const cur = map.get(s.participantId) ?? { subtotalCents: 0, count: 0 }
-    const subtotal = s.subtotalCents ?? (s.unitPriceCents || 0) * (s.quantity || 0)
-    cur.subtotalCents += subtotal
+    const cur = localMap.get(s.participantId) ?? { subtotalCents: 0, count: 0 }
+    cur.subtotalCents += s.subtotalCents ?? s.unitPriceCents * s.quantity
     cur.count += s.quantity || 0
-    map.set(s.participantId, cur)
+    localMap.set(s.participantId, cur)
   }
-  return participants.value.map((p) => ({
-    participantId: p.id,
-    displayName: p.displayName,
-    subtotalCents: map.get(p.id)?.subtotalCents ?? 0,
-    count: map.get(p.id)?.count ?? 0,
-  }))
+  return participants.value.map((p) => {
+    const server = serverSummary?.find((x) => x.participantId === p.id)
+    return {
+      participantId: p.id,
+      displayName: p.displayName,
+      subtotalCents: server?.subtotalCents ?? localMap.get(p.id)?.subtotalCents ?? 0,
+      count: localMap.get(p.id)?.count ?? 0,
+    }
+  })
 })
 
-const totalCents = computed(() => perPersonSubtotal.value.reduce((sum, p) => sum + p.subtotalCents, 0))
+const totalCents = computed(() => plan.value?.summary?.totalCents ?? perPersonSubtotal.value.reduce((sum, p) => sum + p.subtotalCents, 0))
 
 const currentParticipant = computed(() => participants.value.find((p) => p.id === currentParticipantId.value) ?? null)
 
@@ -166,15 +197,26 @@ async function mutateAndSubmit(mutate: (list: PlanItemSelection[]) => PlanItemSe
   const next = mutate(currentSelections.value)
   saving.value = true
   try {
-    const updated = await planApi.submitSelections(planId.value, { participantId: pid, items: next })
-    // 以服务端返回为准，避免本地派生字段（如 subtotalCents）与服务端不一致
-    plan.value = updated
+    await planApi.submitSelections(planId.value, { participantId: pid, items: toSubmitItems(next) })
+    // 后端只回 {ok:true}，必须重新拉取全量状态
+    await loadPlan(planId.value)
     return true
   } catch {
     return false
   } finally {
     saving.value = false
   }
+}
+
+/** 内部扁平选餐 → 后端 SelectionItem[]（字段名按 SubmitSelectionRequest） */
+function toSubmitItems(list: PlanItemSelection[]): SubmitSelectionItem[] {
+  return list.map((s) => ({
+    externalItemId: s.externalItemId,
+    name: s.name,
+    quantity: s.quantity,
+    unitPriceCents: s.unitPriceCents,
+    specOptionsJson: s.specOptionsJson ?? s.specOptions ?? null,
+  }))
 }
 
 /** 加入当前成员（已存在则数量 +1） */
@@ -222,7 +264,7 @@ async function savePlan(): Promise<boolean> {
     for (const p of participants.value) {
       const items = selections.value.filter((s) => s.participantId === p.id)
       if (items.length === 0) continue
-      await planApi.submitSelections(planId.value, { participantId: p.id, items })
+      await planApi.submitSelections(planId.value, { participantId: p.id, items: toSubmitItems(items) })
     }
     await loadPlan(planId.value)
     return true
@@ -233,16 +275,17 @@ async function savePlan(): Promise<boolean> {
   }
 }
 
-/** 添加成员 */
+/** 添加成员；后端返回新成员 id，添加后重新拉取并切到新成员 */
 async function addParticipant(payload: { displayName: string; projectId?: number | null }): Promise<boolean> {
   if (!plan.value) return false
   addingParticipant.value = true
   try {
-    const updated = await planApi.addParticipant(planId.value, {
+    const newId = await planApi.addParticipant(planId.value, {
       displayName: payload.displayName,
       projectId: payload.projectId ?? null,
     })
-    plan.value = updated
+    await loadPlan(planId.value)
+    if (typeof newId === 'number') currentParticipantId.value = newId
     return true
   } catch {
     return false

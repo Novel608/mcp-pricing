@@ -3,9 +3,9 @@ import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
 import planStore from '@/store/plan'
-import { formatYuan } from '@/utils/money'
+import { formatSignedYuan, formatYuan } from '@/utils/money'
 import { isDiscounted } from '@/utils/menu'
-import type { MealChoice, MenuMeal } from '@/types/plan'
+import type { MealChoice, MealRound, MenuMeal } from '@/types/plan'
 
 const categories = computed(() => planStore.menu.value.categories)
 const menuLoading = computed(() => planStore.menuLoading.value)

@@ -51,13 +51,41 @@ export interface PlanItemSelection {
   quantity: number
   /** 单位：分 */
   unitPriceCents: number
-  /** 规格选项（后端存字符串，可能是 JSON） */
+  /** 规格选项。后端字段名为 `specOptionsJson`，`specOptions` 为兼容别名 */
   specOptions?: string | null
+  specOptionsJson?: string | null
   /** 单位：分，派生 = unitPriceCents × quantity */
   subtotalCents?: number
 }
 
-/** 按餐品聚合（全员口径） */
+/**
+ * 后端 `GET /plans/{id}` 的 selections 实际是「按成员分组」结构（ParticipantSelectionVO），
+ * 不是扁平列表。前端内部会拍平使用，但类型必须与响应一致。
+ */
+export interface ParticipantSelectionGroup {
+  participantId: number
+  displayName?: string
+  items: PlanItemSelection[]
+  /** 单位：分，服务端已算好该成员小计 */
+  subtotalCents?: number
+}
+
+/** 每人小计（后端 summary.perPerson） */
+export interface PersonSubtotal {
+  participantId: number
+  displayName?: string
+  /** 单位：分 */
+  subtotalCents: number
+}
+
+/** 方案汇总（后端 summary） */
+export interface PlanSummary {
+  perPerson: PersonSubtotal[]
+  /** 单位：分 */
+  totalCents: number
+}
+
+/** 按餐品聚合（设计域模型 ItemAggregate，后端当前未提供，保留兼容） */
 export interface ItemAggregate {
   externalItemId: string
   name: string
@@ -107,22 +135,25 @@ export interface PlanRecommendation {
 }
 
 /**
- * GET /plans/{id} 与 GET /demo/plan 的方案全量状态。
+ * GET /plans/{id} 与 GET /demo/plan 的方案全量状态（PlanDetailVO）。
+ * 注意：`selections` 是按成员分组的数组，`summary` 由服务端算好小计。
  * recommendations / snapshot 本次不使用（T04/T05 前端就绪后再渲染）。
  */
 export interface PlanDetail extends MealPlan {
   participants: PlanParticipant[]
-  selections: PlanItemSelection[]
-  aggregates?: ItemAggregate[]
-  /** 项目目录。域模型未定义，部分后端实现可能附带，有则用于项目下拉 */
+  selections: ParticipantSelectionGroup[]
+  summary?: PlanSummary
+  /** 项目目录。后端 PlanDetailVO 当前未提供，有则用于项目下拉 */
   projects?: Array<{ id: number; name: string; code?: string }>
+  /** 按餐品聚合。后端当前未提供，保留兼容 */
+  aggregates?: ItemAggregate[]
   recommendations?: PlanRecommendation[]
   snapshot?: PlanSnapshot | null
 }
 
 /* ============ 菜单（GET /mcp/meals） ============ */
 
-/** 菜单卡片。后端适配层应把 MCP 的元字符串转成整数分 */
+/** 菜单卡片（后端 MealVO，金额已由适配层转为分） */
 export interface MenuMeal {
   /** MCP 餐品编码，即 externalItemId */
   code: string
@@ -139,6 +170,7 @@ export interface MenuMeal {
 
 export interface MenuCategory {
   name: string
+  daypart?: string
   /** 分类下的餐品编码列表 */
   meals?: Array<{ code: string; tags?: string[] } | string>
   mealCodes?: string[]
@@ -149,17 +181,17 @@ export interface MenuResponse {
   storeName?: string
   categories?: MenuCategory[]
   /**
-   * 餐品字典。MCP 原始结构是「code → meal」的 map，
-   * 后端可能原样透传或转成数组，两种都要兼容。
+   * 餐品列表。后端 MealMenuVO 给出的是数组；
+   * 同时兼容 MCP 原始的「code → meal」map 形态。
    */
   meals?: Record<string, MenuMeal> | MenuMeal[]
   /** 菜单缓存版本（T04 试算用） */
   menuCacheVersion?: string
 }
 
-/* ============ 餐品详情（GET /mcp/meals/{itemId}） ============ */
+/* ============ 餐品详情（GET /mcp/meals/{itemId}，后端 MealDetailVO） ============ */
 
-/** 规格替换项的可选项值 */
+/** 规格替换项的可选项值（MCP 原始结构，后端当前未透出，保留兼容） */
 export interface ModificationValue {
   code: string
   name: string
@@ -180,17 +212,20 @@ export interface MealChoice {
   code: string
   name: string
   quantity?: number
-  maxQuantity?: number
-  /** 0/1 */
-  isDefault?: number
-  /** MCP 原始为字符串，如 "+ ¥2.5" / "- ¥0.5" */
+  /** 后端为 Boolean；MCP 原始为 0/1 数字 */
+  isDefault?: boolean | number
+  /** 单位：分。后端字段名，形如 +¥250 / -¥50 */
+  diffPriceCents?: number | null
+  /** MCP 原始字符串（如 "+ ¥2.5"），后端未透出时保留兼容 */
   diffPrice?: string
   supportModify?: boolean
+  /** 规格修改项（后端当前未透出，保留兼容） */
   modification?: { items?: ModificationItem[] }
 }
 
 export interface MealRound {
-  id?: number
+  /** 后端为 String */
+  id?: string | number
   name: string
   quantity?: number
   maxQuantity?: number
@@ -202,6 +237,8 @@ export interface MealDetail {
   code: string
   name: string
   image?: string
+  /** 单位：分 */
+  priceCents?: number
   supportModify?: boolean
   rounds?: MealRound[]
 }
@@ -211,11 +248,12 @@ export interface MealDetail {
 /** POST /plans */
 export interface CreatePlanPayload {
   title: string
-  storeCode?: string
   storeId?: string
+  storeName?: string
   beCode?: string
   channel?: string
   mealTime?: string
+  participants?: Array<{ displayName: string; personRef?: string; projectId?: number | null; sortOrder?: number }>
 }
 
 /** POST /plans/{id}/participants */
@@ -223,13 +261,23 @@ export interface AddPlanParticipantPayload {
   displayName: string
   personRef?: string
   projectId?: number | null
+  sortOrder?: number
+}
+
+/** PUT /plans/{id}/selections 的单项（后端 SelectionItem） */
+export interface SubmitSelectionItem {
+  externalItemId: string
+  name: string
+  quantity: number
+  unitPriceCents: number
+  specOptionsJson?: string | null
 }
 
 /**
- * PUT /plans/{id}/selections 请求体。
- * 设计时序图显示 participantId 走 query param，这里同时支持 body 携带（双路兼容）。
+ * PUT /plans/{id}/selections 请求体（后端 SubmitSelectionRequest）。
+ * participantId 走 body；设计时序图写的 query param 一并带上做兼容。
  */
 export interface SubmitSelectionsPayload {
   participantId: number
-  items: PlanItemSelection[]
+  items: SubmitSelectionItem[]
 }
