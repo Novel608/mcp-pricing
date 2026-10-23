@@ -1,0 +1,5 @@
+# 官方参赛声明要求「文件名及内容均不可改动」→ 禁止 Git 做任何换行符转换
+CONTEST_DECLARATION.md -text
+
+# 其余文本文件统一 LF 入库，检出时按各平台默认，避免无意义 diff
+* text=auto eol=lf
