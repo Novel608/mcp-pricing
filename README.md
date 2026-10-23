@@ -318,6 +318,6 @@ mcd-meal-ledger/
 
 ## License
 
-建议采用 **MIT License**（待项目负责人确认后补充 `LICENSE` 文件）。
+**MIT License**（见 [`LICENSE`](./LICENSE)）。
 
 > 本项目为麦当劳程序员创意开发大赛参赛作品，与麦当劳品牌无隶属关系；文中不含任何品牌对比内容。
